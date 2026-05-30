@@ -1,0 +1,7 @@
+node_modules/
+.netlify/
+habits.db
+__pycache__/
+*.pyc
+*.log
+habit-calendar-screenshot.png

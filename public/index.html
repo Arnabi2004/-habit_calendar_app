@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Habit Calendar</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="topbar">
+        <div class="title-block">
+          <div>
+            <p class="eyebrow">Monthly Habit Tracker</p>
+            <h1>Daily Rhythm</h1>
+          </div>
+          <div class="live-clock" aria-label="Current time">
+            <span id="clockTime">--:--:--</span>
+            <small id="clockDate">Today</small>
+          </div>
+        </div>
+        <div class="month-controls" aria-label="Month controls">
+          <button id="prevMonth" type="button" aria-label="Previous month">&lsaquo;</button>
+          <label>
+            <span>Month</span>
+            <input id="monthPicker" type="month">
+          </label>
+          <button id="nextMonth" type="button" aria-label="Next month">&rsaquo;</button>
+        </div>
+      </section>
+
+      <section class="today-panel" aria-label="Today's habit tracker">
+        <div>
+          <p class="eyebrow">Today</p>
+          <h2 id="todayTitle">Today's Progress</h2>
+        </div>
+        <div id="todayHabits" class="today-habits"></div>
+      </section>
+
+      <section class="month-summary-panel" aria-label="Monthly habit summary">
+        <div class="section-heading">
+          <p class="eyebrow">Month Summary</p>
+          <h2 id="summaryTitle">Monthly Habit Summary</h2>
+        </div>
+        <div id="monthSummary" class="month-summary"></div>
+      </section>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

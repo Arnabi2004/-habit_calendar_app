@@ -1,0 +1,17 @@
+[build]
+  publish = "public"
+  functions = "netlify/functions"
+  command = "npm run build"
+
+[functions]
+  node_bundler = "esbuild"
+
+[[redirects]]
+  from = "/api/month"
+  to = "/.netlify/functions/month"
+  status = 200
+
+[[redirects]]
+  from = "/api/habit"
+  to = "/.netlify/functions/habit"
+  status = 200

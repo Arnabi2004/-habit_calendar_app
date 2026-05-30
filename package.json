@@ -1,0 +1,16 @@
+{
+  "name": "daily-rhythm-habit-tracker",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "netlify dev",
+    "build": "echo \"Static site ready\""
+  },
+  "dependencies": {
+    "@netlify/blobs": "^10.7.4"
+  },
+  "devDependencies": {
+    "netlify-cli": "^22.0.0"
+  }
+}
