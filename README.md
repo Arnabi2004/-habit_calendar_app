@@ -10,6 +10,7 @@ A Netlify-ready full-stack habit tracker for one person.
 - Meditation can be ticked any time today
 - Monthly read-only summary table
 - Phone-friendly responsive UI
+- Greeting pop-ups after successful habit logs
 
 The deployed app stores progress in Netlify Blobs through Netlify Functions. Reads use strong consistency so ticks appear immediately after saving. The frontend script is versioned as `app-v4.js` to avoid old browser/Netlify cache behavior. Local development uses `.netlify/local-habits.json` as a fallback.
 
