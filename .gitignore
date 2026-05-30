@@ -5,3 +5,4 @@ __pycache__/
 *.pyc
 *.log
 habit-calendar-screenshot.png
+storage/*.json

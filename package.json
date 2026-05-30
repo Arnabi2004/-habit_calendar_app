@@ -4,7 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "start": "node server.mjs",
     "dev": "netlify dev",
+    "dev:render": "node server.mjs",
     "build": "echo \"Static site ready\""
   },
   "dependencies": {

@@ -42,3 +42,39 @@ Functions directory: netlify/functions
 - `POST /api/habit`
 
 Netlify redirects those routes to the serverless functions in `netlify/functions`.
+
+## Deploy To Render
+
+Render runs this app as a normal Node.js web service with `server.mjs`.
+
+Use these settings:
+
+```text
+Service type: Web Service
+Runtime: Node
+Build command: npm install
+Start command: npm start
+```
+
+The app automatically uses Render's `PORT` environment variable.
+
+For persistent habit data, add a Render persistent disk:
+
+```text
+Mount path: /opt/render/project/src/storage
+Size: 1 GB
+```
+
+Then add this environment variable:
+
+```text
+DATA_DIR=/opt/render/project/src/storage
+```
+
+The Render server stores progress in:
+
+```text
+storage/habits.json
+```
+
+Important: Render's filesystem is ephemeral without a persistent disk, so habit data can disappear after redeploys or restarts if you skip the disk.
