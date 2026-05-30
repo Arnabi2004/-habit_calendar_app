@@ -39,11 +39,7 @@ function updateClock() {
   });
 
   if (latestTodayData) {
-    renderTodayPanel(latestTodayData);
-  }
-
-  if (latestMonthData) {
-    renderCalendar(latestMonthData);
+    updateTodayStatuses();
   }
 }
 
@@ -166,6 +162,42 @@ function renderTodayPanel(data) {
     .join("");
 }
 
+function updateTodayStatuses() {
+  const today = isoDate(new Date());
+  todayHabits.querySelectorAll("input[data-habit]").forEach((input) => {
+    const key = input.dataset.habit;
+    const completed = input.checked;
+    const status = strictStatus(today, key, completed);
+    const card = input.closest(".today-check");
+    const text = card.querySelector("span");
+    let helper = text.querySelector("small");
+
+    input.disabled = status.disabled;
+    card.classList.toggle("locked", status.disabled);
+
+    if (status.message) {
+      if (!helper) {
+        helper = document.createElement("small");
+        text.append(helper);
+      }
+      helper.textContent = status.message;
+    } else if (helper) {
+      helper.remove();
+    }
+  });
+}
+
+function setHabitInData(data, logDate, habitKey, completed) {
+  if (!data) {
+    return;
+  }
+
+  const day = data.days.find((item) => item.date === logDate);
+  if (day) {
+    day.habits[habitKey] = completed;
+  }
+}
+
 function renderCalendar(data) {
   renderMonthSummary(data);
 }
@@ -213,20 +245,27 @@ function renderMonthSummary(data) {
 }
 
 async function updateHabit(input) {
+  const completed = input.checked;
   const response = await fetch("/api/habit", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
       date: input.dataset.date,
       habit: input.dataset.habit,
-      completed: input.checked,
+      completed,
     }),
   });
 
   if (!response.ok) {
     input.checked = false;
+    updateTodayStatuses();
+    return;
   }
-  await loadMonth();
+
+  setHabitInData(latestTodayData, input.dataset.date, input.dataset.habit, completed);
+  setHabitInData(latestMonthData, input.dataset.date, input.dataset.habit, completed);
+  renderTodayPanel(latestTodayData);
+  renderCalendar(latestMonthData);
 }
 
 todayHabits.addEventListener("change", (event) => {
