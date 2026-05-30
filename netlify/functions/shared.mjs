@@ -70,7 +70,7 @@ export function canCompleteStrictHabit(habitKey, logDate) {
 async function blobStore() {
   try {
     const { getStore } = await import("@netlify/blobs");
-    return getStore(STORE_NAME);
+    return getStore({ name: STORE_NAME, consistency: "strong" });
   } catch {
     return null;
   }
@@ -79,7 +79,7 @@ async function blobStore() {
 export async function readLogs() {
   const store = await blobStore();
   if (store) {
-    const data = await store.get(STORE_KEY, { type: "json" });
+    const data = await store.get(STORE_KEY, { type: "json", consistency: "strong" });
     return data || {};
   }
 
