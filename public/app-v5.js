@@ -306,16 +306,15 @@ function renderCalendar(data) {
 
 function renderMonthSummary(data) {
   summaryTitle.textContent = `${data.monthName} ${data.year}`;
-  const habitHeaders = habitKeys
-    .map((key) => `<th scope="col">${habitMeta[key].label}</th>`)
+  const headerCells = data.days
+    .map((day) => `<th scope="col">${new Date(`${day.date}T00:00:00`).getDate()}</th>`)
     .join("");
 
-  const rows = data.days
-    .map((day) => {
-      const date = new Date(`${day.date}T00:00:00`);
-      const habitCells = habitKeys
+  const rows = habitKeys
+    .map((key) => {
+      const dayCells = data.days
         .map(
-          (key) => `
+          (day) => `
             <td class="${day.habits[key] ? "complete" : "missed"}">
               <span aria-label="${day.habits[key] ? "Completed" : "Not completed"}">${
                 day.habits[key] ? "✓" : ""
@@ -327,11 +326,8 @@ function renderMonthSummary(data) {
 
       return `
         <tr>
-          <th scope="row">
-            <strong>${date.getDate()}</strong>
-            <small>${date.toLocaleDateString(undefined, { weekday: "short" })}</small>
-          </th>
-          ${habitCells}
+          <th scope="row">${habitMeta[key].label}</th>
+          ${dayCells}
         </tr>
       `;
     })
@@ -341,8 +337,8 @@ function renderMonthSummary(data) {
     <table>
       <thead>
         <tr>
-          <th scope="col">Day</th>
-          ${habitHeaders}
+          <th scope="col">Habit</th>
+          ${headerCells}
         </tr>
       </thead>
       <tbody>${rows}</tbody>
