@@ -7,5 +7,8 @@
 /app-v4.js
   Cache-Control: no-cache
 
+/app-v5.js
+  Cache-Control: no-cache
+
 /styles.css
   Cache-Control: no-cache

@@ -11,6 +11,8 @@ const DATA_PATH = join(DATA_DIR, "habits.json");
 const HOST = "0.0.0.0";
 const PORT = Number(process.env.PORT || 10000);
 const TIME_ZONE = "Asia/Kolkata";
+const EDIT_LIFE_LIMIT = 10;
+const EDIT_LIFE_STORE_KEY = "__editLife";
 
 const HABITS = {
   wake_6am: "Wake Up",
@@ -22,6 +24,7 @@ const STRICT_WINDOWS = {
   wake_6am: { start: "06:00:00", end: "07:00:00" },
   sleep_11pm: { start: "23:00:00", end: "23:59:59" },
 };
+const STRICT_HABIT_KEYS = new Set(Object.keys(STRICT_WINDOWS));
 
 const CONTENT_TYPES = {
   ".css": "text/css; charset=utf-8",
@@ -69,6 +72,20 @@ function monthName(month) {
   return new Intl.DateTimeFormat("en", { month: "long" }).format(
     new Date(2026, month - 1, 1),
   );
+}
+
+function monthKey(year, month) {
+  return `${year}-${String(month).padStart(2, "0")}`;
+}
+
+function editLifeForMonth(logs, year, month) {
+  const key = monthKey(year, month);
+  const used = Number(logs[EDIT_LIFE_STORE_KEY]?.[key] || 0);
+  return {
+    limit: EDIT_LIFE_LIMIT,
+    used,
+    remaining: Math.max(0, EDIT_LIFE_LIMIT - used),
+  };
 }
 
 function canCompleteStrictHabit(habitKey, logDate) {
@@ -130,8 +147,43 @@ async function handleMonth(req, res, url) {
     year,
     month,
     monthName: monthName(month),
+    editLife: editLifeForMonth(logs, year, month),
     habits: Object.entries(HABITS).map(([key, label]) => ({ key, label })),
     days,
+  });
+}
+
+async function handleEditLife(req, res) {
+  if (req.method !== "POST") {
+    json(res, 405, { error: "Method not allowed" });
+    return;
+  }
+
+  const now = currentKolkataParts();
+  const [yearText, monthText] = now.date.split("-");
+  const year = Number(yearText);
+  const month = Number(monthText);
+  const key = monthKey(year, month);
+  const logs = await readLogs();
+  const used = Number(logs[EDIT_LIFE_STORE_KEY]?.[key] || 0);
+
+  if (used >= EDIT_LIFE_LIMIT) {
+    json(res, 400, {
+      error: "No edit lives left this month",
+      editLife: editLifeForMonth(logs, year, month),
+    });
+    return;
+  }
+
+  logs[EDIT_LIFE_STORE_KEY] = {
+    ...(logs[EDIT_LIFE_STORE_KEY] || {}),
+    [key]: used + 1,
+  };
+  await writeLogs(logs);
+
+  json(res, 200, {
+    ok: true,
+    editLife: editLifeForMonth(logs, year, month),
   });
 }
 
@@ -152,6 +204,8 @@ async function handleHabit(req, res) {
   const logDate = payload.date;
   const habitKey = payload.habit;
   const completed = Boolean(payload.completed);
+  const adminEdit = Boolean(payload.adminEdit || payload.override);
+  const hasEditToken = typeof payload.editToken === "string" && payload.editToken.startsWith("edit-");
 
   if (!/^\d{4}-\d{2}-\d{2}$/.test(logDate) || !HABITS[habitKey]) {
     json(res, 400, { error: "Invalid habit update" });
@@ -163,7 +217,7 @@ async function handleHabit(req, res) {
     return;
   }
 
-  if (completed && !canCompleteStrictHabit(habitKey, logDate)) {
+  if (STRICT_HABIT_KEYS.has(habitKey) && !(adminEdit && hasEditToken) && !canCompleteStrictHabit(habitKey, logDate)) {
     json(res, 400, { error: "This habit can only be ticked during its strict time window" });
     return;
   }
@@ -213,6 +267,10 @@ const server = createServer(async (req, res) => {
     }
     if (url.pathname === "/api/habit") {
       await handleHabit(req, res);
+      return;
+    }
+    if (url.pathname === "/api/edit-life") {
+      await handleEditLife(req, res);
       return;
     }
     serveStatic(req, res, url);

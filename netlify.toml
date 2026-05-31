@@ -15,3 +15,8 @@
   from = "/api/habit"
   to = "/.netlify/functions/habit"
   status = 200
+
+[[redirects]]
+  from = "/api/edit-life"
+  to = "/.netlify/functions/edit-life"
+  status = 200

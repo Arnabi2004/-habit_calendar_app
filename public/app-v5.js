@@ -16,10 +16,12 @@ const clockTime = document.querySelector("#clockTime");
 const clockDate = document.querySelector("#clockDate");
 const todayTitle = document.querySelector("#todayTitle");
 const todayHabits = document.querySelector("#todayHabits");
+const editTodayButton = document.querySelector("#editTodayButton");
 const summaryTitle = document.querySelector("#summaryTitle");
 const monthSummary = document.querySelector("#monthSummary");
 const habitToast = document.querySelector("#habitToast");
 const APP_VERSION = "render-v5";
+const EDIT_LIFE_LIMIT = 10;
 const morningMessages = [
   "Good morning love 🌞💛",
   "Good morning Arnabi ji 🌼✨",
@@ -94,6 +96,9 @@ let currentDate = new Date();
 currentDate.setDate(1);
 let latestMonthData = null;
 let latestTodayData = null;
+let editMode = false;
+let editToken = "";
+let editLifeSaving = false;
 
 function updateClock() {
   const now = new Date();
@@ -171,6 +176,7 @@ async function loadMonth() {
     latestTodayData = await todayResponse.json();
   }
   renderTodayPanel(latestTodayData);
+  renderEditButton();
   renderCalendar(data);
 }
 
@@ -219,7 +225,7 @@ function strictStatus(dateText, habitKey, completed) {
     return { disabled: false, message: `${formatDuration(end - now)} left` };
   }
 
-  return { disabled: !completed, message: completed ? "completed" : "missed today" };
+  return { disabled: true, message: completed ? "completed" : "missed today" };
 }
 
 function todayData(data) {
@@ -228,6 +234,43 @@ function todayData(data) {
     date: today,
     habits: Object.fromEntries(habitKeys.map((key) => [key, false])),
   };
+}
+
+function editLifeFromData(data) {
+  const life = data?.editLife || {};
+  const limit = Number.isInteger(life.limit) ? life.limit : EDIT_LIFE_LIMIT;
+  const used = Number.isInteger(life.used) ? life.used : 0;
+  const remaining = Number.isInteger(life.remaining) ? life.remaining : Math.max(0, limit - used);
+  return { limit, used, remaining };
+}
+
+function sameMonthData(first, second) {
+  return Boolean(first && second && first.year === second.year && first.month === second.month);
+}
+
+function setEditLife(data, editLife) {
+  if (data) {
+    data.editLife = editLife;
+  }
+}
+
+function renderEditButton() {
+  const life = editLifeFromData(latestTodayData);
+  const locked = !editMode && life.remaining <= 0;
+  editTodayButton.innerHTML = `
+    <span class="heart-icon" aria-hidden="true">❤️</span>
+    <span class="life-count">${life.remaining}</span>
+  `;
+  editTodayButton.disabled = locked || editLifeSaving;
+  editTodayButton.classList.toggle("active", editMode);
+  editTodayButton.classList.toggle("empty", locked);
+  editTodayButton.setAttribute(
+    "aria-label",
+    editMode ? "Close edit mode" : `${life.remaining} edit lives left this month`,
+  );
+  editTodayButton.title = editMode
+    ? "Close edit mode"
+    : `${life.remaining} edit lives left this month`;
 }
 
 function renderTodayPanel(data) {
@@ -243,16 +286,17 @@ function renderTodayPanel(data) {
     .map((key) => {
       const status = strictStatus(today.date, key, today.habits[key]);
       const helperText = status.message;
+      const locked = editMode ? false : status.disabled;
       return `
         <label class="today-check ${today.habits[key] ? "done" : ""} ${
-          status.disabled ? "locked" : ""
+          locked ? "locked" : ""
         }">
           <input
             type="checkbox"
             data-date="${today.date}"
             data-habit="${key}"
             ${today.habits[key] ? "checked" : ""}
-            ${status.disabled ? "disabled" : ""}
+            ${locked ? "disabled" : ""}
           >
           <span>
             <strong>${habitMeta[key].label}</strong>
@@ -270,12 +314,13 @@ function updateTodayStatuses() {
     const key = input.dataset.habit;
     const completed = input.checked;
     const status = strictStatus(today, key, completed);
+    const locked = editMode ? false : status.disabled;
     const card = input.closest(".today-check");
     const text = card.querySelector("span");
     let helper = text.querySelector("small");
 
-    input.disabled = status.disabled;
-    card.classList.toggle("locked", status.disabled);
+    input.disabled = locked;
+    card.classList.toggle("locked", locked);
 
     if (status.message) {
       if (!helper) {
@@ -287,6 +332,41 @@ function updateTodayStatuses() {
       helper.remove();
     }
   });
+}
+
+function setEditMode(enabled) {
+  editMode = enabled;
+  editToken = editMode ? `edit-${Date.now()}-${Math.random().toString(16).slice(2)}` : "";
+  renderEditButton();
+  if (latestTodayData) {
+    renderTodayPanel(latestTodayData);
+  }
+}
+
+async function spendEditLife() {
+  editLifeSaving = true;
+  renderEditButton();
+
+  const response = await fetch("/api/edit-life", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({}),
+  });
+
+  editLifeSaving = false;
+
+  if (!response.ok) {
+    renderEditButton();
+    return false;
+  }
+
+  const data = await response.json();
+  setEditLife(latestTodayData, data.editLife);
+  if (sameMonthData(latestMonthData, latestTodayData)) {
+    setEditLife(latestMonthData, data.editLife);
+  }
+  renderEditButton();
+  return true;
 }
 
 function setHabitInData(data, logDate, habitKey, completed) {
@@ -355,6 +435,8 @@ async function updateHabit(input) {
       date: input.dataset.date,
       habit: input.dataset.habit,
       completed,
+      adminEdit: editMode,
+      editToken,
     }),
   });
 
@@ -392,6 +474,25 @@ prevMonth.addEventListener("click", () => {
 nextMonth.addEventListener("click", () => {
   currentDate.setMonth(currentDate.getMonth() + 1);
   loadMonth();
+});
+
+editTodayButton.addEventListener("click", () => {
+  if (editMode) {
+    setEditMode(false);
+    return;
+  }
+
+  const life = editLifeFromData(latestTodayData);
+  if (life.remaining <= 0 || editLifeSaving) {
+    renderEditButton();
+    return;
+  }
+
+  spendEditLife().then((spent) => {
+    if (spent) {
+      setEditMode(true);
+    }
+  });
 });
 
 loadMonth();

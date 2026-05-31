@@ -1,4 +1,11 @@
-import { HABITS, daysInMonth, jsonResponse, monthName, readLogs } from "./shared.mjs";
+import {
+  HABITS,
+  daysInMonth,
+  editLifeForMonth,
+  jsonResponse,
+  monthName,
+  readLogs,
+} from "./shared.mjs";
 
 export async function handler(event) {
   const params = new URLSearchParams(event.rawQuery || "");
@@ -28,6 +35,7 @@ export async function handler(event) {
     year,
     month,
     monthName: monthName(month),
+    editLife: editLifeForMonth(logs, year, month),
     habits: Object.entries(HABITS).map(([key, label]) => ({ key, label })),
     days,
   });

@@ -184,11 +184,80 @@ h1 {
   margin-bottom: 5px;
 }
 
+.today-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 .today-panel h2 {
   margin: 0;
   color: var(--ink);
   font-size: clamp(1.45rem, 3vw, 2.4rem);
   line-height: 1;
+}
+
+.edit-today-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 64px;
+  height: 38px;
+  border: 1px solid #ffc1ca;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #b71938;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 850;
+  padding: 0 10px;
+  box-shadow: 0 10px 22px rgba(183, 25, 56, 0.08);
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.edit-today-button:hover {
+  transform: translateY(-1px);
+}
+
+.edit-today-button.active {
+  border-color: #df3053;
+  background: linear-gradient(135deg, #e7385e, #b71938);
+  color: #ffffff;
+}
+
+.edit-today-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+  transform: none;
+}
+
+.edit-today-button.empty {
+  background: #fff5f7;
+}
+
+.heart-icon {
+  display: inline-block;
+  line-height: 1;
+}
+
+.life-count {
+  display: inline-grid;
+  place-items: center;
+  min-width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  background: #fff0f3;
+  color: #b71938;
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.edit-today-button.active .life-count {
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
 }
 
 .today-habits {

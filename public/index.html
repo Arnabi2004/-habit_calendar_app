@@ -30,9 +30,15 @@
       </section>
 
       <section class="today-panel" aria-label="Today's habit tracker">
-        <div>
-          <p class="eyebrow">Today</p>
-          <h2 id="todayTitle">Today's Progress</h2>
+        <div class="today-heading">
+          <div>
+            <p class="eyebrow">Today</p>
+            <h2 id="todayTitle">Today's Progress</h2>
+          </div>
+          <button id="editTodayButton" class="edit-today-button" type="button" aria-label="Open edit mode">
+            <span class="heart-icon" aria-hidden="true">❤️</span>
+            <span class="life-count">10</span>
+          </button>
         </div>
         <div id="todayHabits" class="today-habits"></div>
       </section>

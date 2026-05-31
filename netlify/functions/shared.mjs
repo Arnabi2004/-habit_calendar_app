@@ -16,6 +16,8 @@ const STORE_NAME = "daily-rhythm-habits";
 const STORE_KEY = "habit-logs";
 const LOCAL_DATA_PATH = join(process.cwd(), ".netlify", "local-habits.json");
 const TIME_ZONE = "Asia/Kolkata";
+export const EDIT_LIFE_LIMIT = 10;
+export const EDIT_LIFE_STORE_KEY = "__editLife";
 
 export function jsonResponse(payload, statusCode = 200) {
   return {
@@ -36,6 +38,20 @@ export function monthName(month) {
   return new Intl.DateTimeFormat("en", { month: "long" }).format(
     new Date(2026, month - 1, 1),
   );
+}
+
+export function monthKey(year, month) {
+  return `${year}-${String(month).padStart(2, "0")}`;
+}
+
+export function editLifeForMonth(logs, year, month) {
+  const key = monthKey(year, month);
+  const used = Number(logs[EDIT_LIFE_STORE_KEY]?.[key] || 0);
+  return {
+    limit: EDIT_LIFE_LIMIT,
+    used,
+    remaining: Math.max(0, EDIT_LIFE_LIMIT - used),
+  };
 }
 
 export function currentKolkataParts() {
